@@ -33,7 +33,7 @@ window.fetch = function (input, init) {
 }
 
 window.__supplyToken = function (header) {
-    authorizationHeader = `Bearer: ${header.replace(/^Authorization:\s*Bearer:\s*/i, "")}`;
+    authorizationHeader = `Bearer: ${header.replace(/^(?:Authorization:\s*)?Bearer:\s*/i, "")}`;
     deferredAuthorizationHeader.resolve();
 }
 
