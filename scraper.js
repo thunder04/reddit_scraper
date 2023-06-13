@@ -4,8 +4,6 @@ const oldFetch = window.fetch;
 const deferredAuthorizationHeader = deferredPromise();
 let authorizationHeader = null;
 
-console.info(`[Reddit Scraper] Injecting custom window.fetch()...`);
-
 /**
  *
  * @param {Parameters<globalThis['fetch']>[0]} input
@@ -13,6 +11,9 @@ console.info(`[Reddit Scraper] Injecting custom window.fetch()...`);
  * @returns {ReturnType<globalThis['fetch']>}
  */
 window.fetch = function (input, init) {
+    console.log(init?.headers);
+
+
     if (!authorizationHeader && init && init.headers) {
         if (Array.isArray(init.headers)) {
             authorizationHeader = init.headers.find(([key]) => key.toLowerCase() === "authorization") || null;
@@ -32,16 +33,25 @@ window.fetch = function (input, init) {
     return oldFetch(input, init);
 }
 
+console.info(`[Reddit Scraper] Injected custom window.fetch()`);
+
 window.__supplyToken = function (header) {
-    authorizationHeader = `Bearer: ${header.replace(/^(?:Authorization:\s*)?Bearer:\s*/i, "")}`;
+    authorizationHeader = `Bearer ${header.replace(/\s*(?:Authorization:\s*)?Bearer\s*/i, "").trim()}`;
     deferredAuthorizationHeader.resolve();
 }
 
-console.info(`[Reddit Scraper] Waiting for an authenticated request by reddit... Try to scroll to the end of a page to trigger a request.\n`
-    + `Alternatively, open the Network tab and inspect a "gql.reddit.com" request. Copy the <strong>entire</strong> value of the "Authorization" header `
-    + `and call the __supplyToken("myAuthorizationHeader") function, where myAuthorizationHeader is what you just copied.`);
+const infoMessage = () => {
+    console.info(`[Reddit Scraper] Waiting for an authenticated request by reddit (made with fetch())... Try to scroll to the end of a page to trigger a request.\n`
+        + `Alternatively, open the Network tab and inspect a "gql.reddit.com" request. Copy the entire value of the "Authorization" header `
+        + `and call the __supplyToken("myAuthorizationHeaderValue") function, where myAuthorizationHeaderValue is what you just copied.`);
+};
+
+const infoInterval = setInterval(infoMessage, 7e3); // 7 seconds
+
+infoMessage();
 await deferredAuthorizationHeader.promise;
 delete window.__supplyToken;
+clearInterval(infoInterval);
 
 console.warn(`[Reddit Scraper] Got authorization header: ${authorizationHeader}`);
 
