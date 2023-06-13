@@ -53,7 +53,7 @@ await deferredAuthorizationHeader.promise;
 delete window.__supplyToken;
 clearInterval(infoInterval);
 
-console.warn(`[Reddit Scraper] Got authorization header: ${authorizationHeader}`);
+console.warn(`[Reddit Scraper] Got authorization header: ${authorizationHeader.slice(0, "Bearer ".length + 20)}**********`);
 
 
 // for (const [id, url] of posts) {
